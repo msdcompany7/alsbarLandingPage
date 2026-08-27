@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("WEBSITE_DATABASE_URL")
+}
+
+enum InquirySource {
+  contact_form
+  quote_request
+  whatsapp_click
+}
+
+enum InquiryStatus {
+  new
+  read
+  handled
+}
+
+enum ProductStatus {
+  draft
+  published
+  archived
+}
+
+model AdminUser {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.VarChar(200)
+  passwordHash String    @map("password_hash") @db.Text
+  name         String    @db.VarChar(120)
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("admin_users")
+}
+
+model Category {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String     @unique @db.VarChar(120)
+  nameHe      String     @map("name_he") @db.VarChar(120)
+  nameEn      String?    @map("name_en") @db.VarChar(120)
+  description String?    @db.Text
+  parentId    String?    @map("parent_id") @db.Uuid
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  imageUrl    String?    @map("image_url") @db.Text
+  icon        String?    @db.VarChar(50)
+  sortOrder   Int        @default(0) @map("sort_order")
+  products    Product[]
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("categories")
+}
+
+model Product {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String         @unique @db.VarChar(200)
+  nameHe           String         @map("name_he") @db.VarChar(200)
+  nameEn           String?        @map("name_en") @db.VarChar(200)
+  sku              String?        @unique @db.VarChar(50)
+  shortDescription String?        @map("short_description") @db.VarChar(160)
+  description      String?        @db.Text
+  categoryId       String         @map("category_id") @db.Uuid
+  category         Category       @relation(fields: [categoryId], references: [id])
+  specs            Json           @default("[]")
+  isFeatured       Boolean        @default(false) @map("is_featured")
+  status           ProductStatus  @default(draft)
+  sortOrder        Int            @default(0) @map("sort_order")
+  viewCount        Int            @default(0) @map("view_count")
+  metaTitle        String?        @map("meta_title") @db.VarChar(70)
+  metaDescription  String?        @map("meta_description") @db.VarChar(160)
+  images           ProductImage[]
+  inquiries        Inquiry[]
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([categoryId, status])
+  @@index([status, isFeatured])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String  @map("product_id") @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String  @db.Text
+  altTextHe String  @map("alt_text_he") @db.VarChar(200)
+  sortOrder Int     @default(0) @map("sort_order")
+  width     Int?
+  height    Int?
+
+  @@index([productId, sortOrder])
+  @@map("product_images")
+}
+
+model Inquiry {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String        @db.VarChar(120)
+  phone     String        @db.VarChar(30)
+  email     String?       @db.VarChar(200)
+  message   String?       @db.Text
+  productId String?       @map("product_id") @db.Uuid
+  product   Product?      @relation(fields: [productId], references: [id])
+  source    InquirySource @default(contact_form)
+  status    InquiryStatus @default(new)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("inquiries")
+}
+
+model SiteSetting {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("site_settings")
+}
