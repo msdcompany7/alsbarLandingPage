@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
+import { PageHero } from "@/components/ui/page-hero";
 import { ProductCard } from "@/components/ui/product-card";
+import { Reveal } from "@/components/ui/reveal";
 import {
   getAllCategorySlugs,
   getCategoryBySlug,
@@ -45,35 +46,34 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { products } = await getProducts({ category: slug, pageSize: 100 });
 
   return (
-    <section className="section-padding bg-surface-alt">
-      <Container>
-        <Breadcrumbs
-          items={[
-            { label: "בית", href: "/" },
-            { label: "מוצרים", href: "/products" },
-            { label: category.name },
-          ]}
-          className="mb-6"
-        />
+    <>
+      <PageHero
+        title={category.name}
+        description={category.description}
+        breadcrumbs={[
+          { label: "בית", href: "/" },
+          { label: "מוצרים", href: "/products" },
+          { label: category.name },
+        ]}
+      />
 
-        <div className="mb-10 max-w-3xl">
-          <h1 className="text-3xl font-bold text-primary md:text-4xl">
-            {category.name}
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-text-secondary">
-            {category.description}
-          </p>
-          <p className="mt-2 text-sm text-text-secondary">
-            {products.length} מוצרים בקטגוריה זו
-          </p>
-        </div>
+      <section className="section-padding bg-surface">
+        <Container>
+          <Reveal>
+            <p className="mb-8 text-sm text-text-secondary">
+              {products.length} מוצרים בקטגוריה זו
+            </p>
+          </Reveal>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </Container>
-    </section>
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 xl:gap-6">
+            {products.map((product, index) => (
+              <Reveal key={product.id} delay={index * 60}>
+                <ProductCard product={product} />
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+    </>
   );
 }

@@ -32,38 +32,24 @@ export function ImageUploader({ images, onChange, productName }: ImageUploaderPr
   }
 
   async function uploadFile(file: File) {
-    const signResponse = await fetch("/api/admin/cloudinary-sign");
-    if (!signResponse.ok) {
-      throw new Error("Cloudinary is not configured — use image URL instead.");
-    }
-
-    const sign = (await signResponse.json()) as {
-      cloudName: string;
-      apiKey: string;
-      timestamp: number;
-      signature: string;
-      folder: string;
-    };
-
     const compressed = await compressFile(file);
     const formData = new FormData();
     formData.append("file", compressed);
-    formData.append("api_key", sign.apiKey);
-    formData.append("timestamp", String(sign.timestamp));
-    formData.append("signature", sign.signature);
-    formData.append("folder", sign.folder);
 
-    const uploadResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${sign.cloudName}/image/upload`,
-      { method: "POST", body: formData },
-    );
+    const uploadResponse = await fetch("/api/admin/storage-upload", {
+      method: "POST",
+      body: formData,
+    });
 
     if (!uploadResponse.ok) {
-      throw new Error("Image upload failed");
+      const payload = (await uploadResponse.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      throw new Error(payload?.error ?? "Image upload failed");
     }
 
-    const payload = (await uploadResponse.json()) as { secure_url: string };
-    return payload.secure_url;
+    const payload = (await uploadResponse.json()) as { url: string };
+    return payload.url;
   }
 
   async function handleFiles(fileList: FileList | null) {
@@ -115,7 +101,7 @@ export function ImageUploader({ images, onChange, productName }: ImageUploaderPr
     <div className="space-y-4">
       <div
         className={cn(
-          "rounded-xl border-2 border-dashed border-border bg-surface-alt p-6 text-center transition-colors",
+          "rounded-2xl border-2 border-dashed border-border/80 bg-surface-alt/60 p-8 text-center transition-colors hover:border-accent/30",
           uploading && "opacity-70",
         )}
       >
@@ -128,7 +114,7 @@ export function ImageUploader({ images, onChange, productName }: ImageUploaderPr
         </p>
         <button
           type="button"
-          className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light"
+          className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-light hover:shadow-md"
           onClick={() => inputRef.current?.click()}
           disabled={uploading || images.length >= 8}
         >
@@ -151,12 +137,12 @@ export function ImageUploader({ images, onChange, productName }: ImageUploaderPr
           value={manualUrl}
           onChange={(e) => setManualUrl(e.target.value)}
           placeholder="https://... (הדבקת כתובת תמונה)"
-          className="flex-1 rounded-lg border border-border bg-surface px-4 py-2.5 text-sm"
+          className="flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
         <button
           type="button"
           onClick={addManualUrl}
-          className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface-alt"
+          className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-alt"
           disabled={images.length >= 8}
         >
           הוסף
@@ -174,7 +160,7 @@ export function ImageUploader({ images, onChange, productName }: ImageUploaderPr
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
-              className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
+              className="flex items-center gap-3 rounded-xl border border-border/80 bg-surface p-3 shadow-[var(--shadow-soft)]"
             >
               <GripVertical className="h-4 w-4 shrink-0 text-text-secondary" />
               <div className="relative h-16 w-16 overflow-hidden rounded-md bg-surface-alt">

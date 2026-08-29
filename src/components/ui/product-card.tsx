@@ -11,30 +11,30 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      className="card-hover group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-surface-alt">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
-        <span className="absolute top-3 start-3 rounded-md bg-primary/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+        <span className="absolute top-3 start-3 rounded-md bg-white/95 px-2.5 py-1 text-xs font-semibold text-primary shadow-sm backdrop-blur-sm">
           {product.category}
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <h3 className="text-lg font-semibold leading-snug text-text-primary transition-colors group-hover:text-primary">
+      <div className="flex flex-1 flex-col gap-2 p-4 sm:p-5">
+        <h3 className="text-base font-bold leading-snug text-text-primary transition-colors group-hover:text-primary sm:text-lg">
           {product.name}
         </h3>
-        <p className="line-clamp-2 text-sm text-text-secondary">
+        <p className="line-clamp-2 text-sm leading-relaxed text-text-secondary">
           {product.shortDescription}
         </p>
-        <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold text-accent">
+        <span className="mt-auto inline-flex items-center gap-1 pt-3 text-sm font-semibold text-accent">
           בקשת הצעת מחיר
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
         </span>
       </div>
     </Link>

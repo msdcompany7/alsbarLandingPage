@@ -4,6 +4,7 @@ import type { SiteSettings } from "@/lib/site-settings";
 import { siteSettingsToPhoneHref } from "@/lib/site-settings";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 
 type LocationSectionProps = {
   settings: SiteSettings;
@@ -15,58 +16,58 @@ export function LocationSection({ settings }: LocationSectionProps) {
   return (
     <section className="section-padding bg-surface-alt">
       <Container>
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-            <iframe
-              title="מפת החנות"
-              src={siteConfig.googleMapsEmbed}
-              className="aspect-[4/3] w-full border-0 lg:aspect-square"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
-          </div>
+        <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+          <Reveal>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-soft)]">
+              <iframe
+                title="מפת החנות"
+                src={siteConfig.googleMapsEmbed}
+                className="aspect-[4/3] w-full border-0 lg:aspect-[5/4]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+          </Reveal>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent">
-              בואו לבקר
-            </p>
-            <h2 className="text-3xl font-bold text-primary md:text-[2rem]">
-              איך מגיעים אלינו
-            </h2>
-            <p className="mt-3 text-text-secondary">
-              החנות פתוחה לקהל — בואו לראות את המלאי, לקבל ייעוץ מקצועי ולקחת ציוד
-              ישירות מהמדף.
-            </p>
+          <Reveal delay={100}>
+            <div>
+              <p className="eyebrow mb-2">בואו לבקר</p>
+              <h2 className="heading-section">איך מגיעים אלינו</h2>
+              <p className="lead mt-3 max-w-xl">
+                החנות פתוחה לקהל — בואו לראות את המלאי, לקבל ייעוץ מקצועי ולקחת ציוד
+                ישירות מהמדף.
+              </p>
+            </div>
 
             <ul className="mt-8 space-y-5">
-              <li className="flex items-start gap-3">
-                <MapPin className="mt-1 h-5 w-5 shrink-0 text-accent" />
+              <li className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
                 <div>
                   <p className="font-semibold text-text-primary">כתובת</p>
-                  <p className="text-text-secondary">{settings.address}</p>
+                  <p className="mt-1 text-text-secondary">{settings.address}</p>
                 </div>
               </li>
-              <li className="flex items-start gap-3">
-                <Phone className="mt-1 h-5 w-5 shrink-0 text-accent" />
+              <li className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4">
+                <Phone className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
                 <div>
                   <p className="font-semibold text-text-primary">טלפון</p>
                   <a
                     href={phoneHref}
                     dir="ltr"
-                    className="text-text-secondary hover:text-primary"
+                    className="mt-1 inline-block text-text-secondary hover:text-primary"
                   >
                     {settings.phone}
                   </a>
                 </div>
               </li>
-              <li className="flex items-start gap-3">
-                <Clock className="mt-1 h-5 w-5 shrink-0 text-accent" />
-                <div>
+              <li className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4">
+                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                <div className="w-full">
                   <p className="font-semibold text-text-primary">שעות פתיחה</p>
-                  <ul className="mt-1 space-y-1 text-text-secondary">
+                  <ul className="mt-2 space-y-1.5 text-sm text-text-secondary">
                     {siteConfig.hours.map((row) => (
-                      <li key={row.days} className="flex justify-between gap-6">
+                      <li key={row.days} className="flex justify-between gap-4">
                         <span>{row.days}</span>
                         <span dir="ltr">{row.time}</span>
                       </li>
@@ -82,7 +83,7 @@ export function LocationSection({ settings }: LocationSectionProps) {
                 ניווט ב-Waze
               </Button>
             </div>
-          </div>
+          </Reveal>
         </div>
       </Container>
     </section>

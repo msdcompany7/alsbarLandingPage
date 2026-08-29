@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ProductStatus } from "@/generated/prisma";
+import type { ProductStatus } from "@/lib/types/database";
 import {
   deleteProduct,
   saveProduct,
@@ -12,6 +12,9 @@ import {
 import { slugify } from "@/lib/slugify";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { AdminAlert } from "@/components/admin/ui/admin-alert";
+import { AdminFormSection } from "@/components/admin/ui/admin-form-section";
+import { AdminSelect } from "@/components/admin/ui/admin-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,11 +139,10 @@ export function ProductEditor({ categories, initial }: ProductEditorProps) {
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <Label htmlFor="categoryId">קטגוריה *</Label>
-              <select
+              <AdminSelect
                 id="categoryId"
                 value={form.categoryId}
                 onChange={(e) => updateField("categoryId", e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm"
                 required
               >
                 {categories.map((category) => (
@@ -148,7 +150,7 @@ export function ProductEditor({ categories, initial }: ProductEditorProps) {
                     {category.nameHe}
                   </option>
                 ))}
-              </select>
+              </AdminSelect>
             </div>
             <div>
               <Label htmlFor="sku">מק&quot;ט</Label>
@@ -195,54 +197,50 @@ export function ProductEditor({ categories, initial }: ProductEditorProps) {
             />
           </div>
 
-          <div className="rounded-xl border border-border bg-surface-alt p-4 space-y-4">
+          <AdminFormSection title="פרסום ותצוגה" description="סטטוס ומיקום בדף הבית">
             <div>
               <Label htmlFor="status">סטטוס</Label>
-              <select
+              <AdminSelect
                 id="status"
                 value={form.status}
                 onChange={(e) =>
                   updateField("status", e.target.value as ProductStatus)
                 }
-                className="mt-1.5 w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm"
+                className="mt-1.5"
               >
                 <option value="draft">טיוטה</option>
                 <option value="published">פורסם</option>
                 <option value="archived">בארכיון</option>
-              </select>
+              </AdminSelect>
             </div>
 
-            <label className="flex items-center gap-2 text-sm font-medium text-text-primary">
+            <label className="mt-4 flex items-center gap-2.5 text-sm font-medium text-text-primary">
               <input
                 type="checkbox"
                 checked={form.isFeatured}
                 onChange={(e) => updateField("isFeatured", e.target.checked)}
-                className="h-4 w-4 rounded border-border"
+                className="h-4 w-4 rounded border-border accent-accent"
               />
               מוצר מומלץ בדף הבית
             </label>
 
             {missingForPublish.length > 0 && (
-              <p className="text-xs text-text-secondary">
+              <p className="mt-3 text-xs text-text-secondary">
                 לפרסום נדרש: {missingForPublish.join(" · ")}
               </p>
             )}
-          </div>
+          </AdminFormSection>
         </aside>
       </div>
 
-      {error && (
-        <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {error}
-        </p>
-      )}
+      {error && <AdminAlert variant="error">{error}</AdminAlert>}
 
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" variant="navy" disabled={isPending}>
+      <div className="flex flex-wrap gap-3 border-t border-border/70 pt-6">
+        <Button type="submit" variant="navy" disabled={isPending} className="rounded-xl">
           {isPending ? "שומר..." : "שמירה"}
         </Button>
         {initial?.id && (
-          <Button type="button" variant="outline" onClick={handleDelete} disabled={isPending}>
+          <Button type="button" variant="outline" onClick={handleDelete} disabled={isPending} className="rounded-xl">
             מחיקה
           </Button>
         )}

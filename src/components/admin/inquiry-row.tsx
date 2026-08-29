@@ -1,7 +1,8 @@
 "use client";
 
-import type { InquiryStatus } from "@/generated/prisma";
+import type { InquiryStatus } from "@/lib/types/database";
 import { updateInquiryStatus } from "@/lib/admin/actions";
+import { AdminBadge } from "@/components/admin/ui/admin-badge";
 import { cn } from "@/lib/utils";
 
 const statusLabels: Record<InquiryStatus, string> = {
@@ -10,10 +11,10 @@ const statusLabels: Record<InquiryStatus, string> = {
   handled: "טופל",
 };
 
-const statusStyles: Record<InquiryStatus, string> = {
-  new: "bg-accent/15 text-primary",
-  read: "bg-primary/10 text-primary",
-  handled: "bg-success/10 text-success",
+const statusVariants: Record<InquiryStatus, "warning" | "primary" | "success"> = {
+  new: "warning",
+  read: "primary",
+  handled: "success",
 };
 
 type InquiryRowProps = {
@@ -34,25 +35,20 @@ export function InquiryRow({ inquiry }: InquiryRowProps) {
   }
 
   return (
-    <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+    <article className="rounded-2xl border border-border/80 bg-surface p-5 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-bold text-primary">{inquiry.name}</h3>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                statusStyles[inquiry.status],
-              )}
-            >
+            <AdminBadge variant={statusVariants[inquiry.status]}>
               {statusLabels[inquiry.status]}
-            </span>
+            </AdminBadge>
           </div>
           <p className="mt-2 text-sm text-text-secondary" dir="ltr">
             {inquiry.phone}
             {inquiry.email ? ` · ${inquiry.email}` : ""}
           </p>
-          <p className="mt-1 text-xs text-text-secondary">
+          <p className="mt-1 text-xs font-medium text-text-secondary">
             {new Intl.DateTimeFormat("he-IL", {
               dateStyle: "medium",
               timeStyle: "short",
@@ -60,17 +56,17 @@ export function InquiryRow({ inquiry }: InquiryRowProps) {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="inline-flex flex-wrap gap-1.5 rounded-xl border border-border bg-surface-alt/60 p-1">
           {(["new", "read", "handled"] as InquiryStatus[]).map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => handleStatusChange(status)}
               className={cn(
-                "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
                 inquiry.status === status
-                  ? "border-primary bg-primary text-white"
-                  : "border-border text-text-secondary hover:border-primary hover:text-primary",
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-text-secondary hover:bg-surface hover:text-primary",
               )}
             >
               {statusLabels[status]}
@@ -80,7 +76,7 @@ export function InquiryRow({ inquiry }: InquiryRowProps) {
       </div>
 
       {inquiry.message && (
-        <p className="mt-4 rounded-lg bg-surface-alt p-4 text-sm leading-relaxed text-text-primary">
+        <p className="mt-4 rounded-xl border border-border/70 bg-surface-alt/70 p-4 text-sm leading-relaxed text-text-primary">
           {inquiry.message}
         </p>
       )}

@@ -15,12 +15,12 @@ export async function SiteFooter({ settings, phoneHref }: SiteFooterProps) {
   const categories = await getCategories();
 
   return (
-    <footer className="border-t border-white/10 bg-primary text-white">
-      <Container className="py-14">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-4">
+    <footer className="border-t border-border bg-primary text-white">
+      <Container className="py-12 sm:py-14 lg:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <SiteLogo imageClassName="h-12 sm:h-14" />
-            <p className="text-sm leading-relaxed text-white/75">
+            <p className="max-w-sm text-sm leading-relaxed text-white/75">
               {settings.tagline}. אנחנו כאן לכל פרויקט — מבית פרטי ועד אתר בנייה
               גדול.
             </p>
@@ -35,7 +35,7 @@ export async function SiteFooter({ settings, phoneHref }: SiteFooterProps) {
                 <li key={cat.id}>
                   <Link
                     href={`/categories/${cat.slug}`}
-                    className="text-sm text-white/75 transition-colors hover:text-accent"
+                    className="text-sm text-white/75 transition-colors hover:text-white"
                   >
                     {cat.name}
                   </Link>
@@ -57,7 +57,7 @@ export async function SiteFooter({ settings, phoneHref }: SiteFooterProps) {
               </li>
               <li className="flex items-start gap-2.5">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                <a href={`mailto:${settings.email}`} dir="ltr" className="hover:text-white">
+                <a href={`mailto:${settings.email}`} dir="ltr" className="break-all hover:text-white">
                   {settings.email}
                 </a>
               </li>
@@ -76,7 +76,7 @@ export async function SiteFooter({ settings, phoneHref }: SiteFooterProps) {
               {siteConfig.hours.map((row) => (
                 <li
                   key={row.days}
-                  className="flex items-center justify-between gap-4 text-sm text-white/75"
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-white/75"
                 >
                   <span className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-accent" />
@@ -91,11 +91,11 @@ export async function SiteFooter({ settings, phoneHref }: SiteFooterProps) {
       </Container>
 
       <div className="border-t border-white/10">
-        <Container className="flex flex-col items-center justify-between gap-3 py-5 text-sm text-white/60 sm:flex-row">
+        <Container className="flex flex-col items-center justify-between gap-3 py-5 text-center text-sm text-white/60 sm:flex-row sm:text-start">
           <p>
             © {new Date().getFullYear()} {siteConfig.brandNameHe} · S.Light. כל הזכויות שמורות.
           </p>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap justify-center gap-4 sm:justify-end sm:gap-5">
             <Link href="/privacy" className="hover:text-accent">
               מדיניות פרטיות
             </Link>

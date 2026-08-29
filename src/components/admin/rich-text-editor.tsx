@@ -28,7 +28,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "min-h-[180px] rounded-lg border border-border bg-surface px-4 py-3 text-sm leading-relaxed focus:outline-none prose prose-slate max-w-none",
+          "min-h-[180px] rounded-xl border border-border bg-surface px-4 py-3 text-sm leading-relaxed focus:outline-none prose prose-slate max-w-none",
         dir: "rtl",
       },
     },
@@ -61,17 +61,17 @@ export function RichTextEditor({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 rounded-xl border border-border bg-surface-alt/60 p-1.5">
         {tools.map((tool) => (
           <button
             key={tool.label}
             type="button"
             onClick={tool.action}
             className={cn(
-              "rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
+              "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
               tool.active
-                ? "border-primary bg-primary text-white"
-                : "border-border bg-surface text-text-primary hover:bg-surface-alt",
+                ? "bg-primary text-white shadow-sm"
+                : "bg-surface text-text-primary hover:bg-white hover:shadow-sm",
             )}
           >
             {tool.label}

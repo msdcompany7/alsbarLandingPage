@@ -1,31 +1,38 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { buildProductsCsv } from "@/lib/admin/csv";
+import { requireAdmin } from "@/lib/firebase/auth-server";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { categoryFormSchema } from "@/lib/validation/category";
 import type { ProductCsvRow } from "@/lib/validation/product-csv";
 import { siteSettingFields } from "@/lib/site-setting-fields";
 import type { SiteSettings } from "@/lib/site-settings-types";
-import type { InquiryStatus, ProductStatus } from "@/generated/prisma";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-  return session;
-}
+import type { InquiryStatus } from "@/lib/types/database";
+import {
+  createCategory,
+  deleteCategoryById,
+  getCategoryById,
+  getCategoryBySlugConflict,
+  getChildCategories,
+  updateCategory,
+} from "@/lib/firestore/categories";
+import {
+  countAllProductsInCategory,
+  countChildCategories,
+  exportProductsFromFirestore,
+  importProductsToFirestore,
+  saveProductToFirestore,
+  softDeleteProduct,
+  type ProductFormInput,
+  type ProductImageInput,
+  type ProductImportResult,
+} from "@/lib/firestore/products";
+import { updateInquiryStatus as updateInquiryStatusInFirestore } from "@/lib/firestore/inquiries";
+import { saveSiteSettingsToFirestore } from "@/lib/firestore/site-settings";
 
 export async function updateInquiryStatus(id: string, status: InquiryStatus) {
   await requireAdmin();
-
-  await db.inquiry.update({
-    where: { id },
-    data: { status },
-  });
+  await updateInquiryStatusInFirestore(id, status);
 
   revalidatePath("/admin/inquiries");
   revalidatePath("/admin");
@@ -33,34 +40,14 @@ export async function updateInquiryStatus(id: string, status: InquiryStatus) {
 
 export async function deleteProduct(id: string) {
   await requireAdmin();
-
-  await db.product.update({
-    where: { id },
-    data: { deletedAt: new Date(), status: "archived" },
-  });
+  await softDeleteProduct(id);
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
   revalidatePath("/");
 }
 
-export type ProductImageInput = {
-  url: string;
-  altTextHe?: string;
-};
-
-export type ProductFormInput = {
-  id?: string;
-  nameHe: string;
-  slug: string;
-  categoryId: string;
-  shortDescription: string;
-  description: string;
-  sku?: string;
-  status: ProductStatus;
-  isFeatured: boolean;
-  images: ProductImageInput[];
-};
+export type { ProductImageInput, ProductFormInput, ProductImportResult };
 
 export async function saveProduct(input: ProductFormInput) {
   await requireAdmin();
@@ -73,41 +60,7 @@ export async function saveProduct(input: ProductFormInput) {
     throw new Error("Published products require at least one image");
   }
 
-  const data = {
-    nameHe: input.nameHe.trim(),
-    slug: input.slug.trim(),
-    categoryId: input.categoryId,
-    shortDescription: input.shortDescription.trim().slice(0, 160),
-    description: sanitizeHtml(input.description),
-    sku: input.sku?.trim() || null,
-    status: input.status,
-    isFeatured: input.isFeatured,
-  };
-
-  let productId = input.id;
-
-  if (productId) {
-    await db.product.update({
-      where: { id: productId },
-      data,
-    });
-    await db.productImage.deleteMany({ where: { productId } });
-  } else {
-    const created = await db.product.create({ data });
-    productId = created.id;
-  }
-
-  for (const [index, image] of input.images.entries()) {
-    if (!image.url.trim()) continue;
-    await db.productImage.create({
-      data: {
-        productId: productId!,
-        url: image.url.trim(),
-        altTextHe: image.altTextHe?.trim() || input.nameHe.trim(),
-        sortOrder: index,
-      },
-    });
-  }
+  const result = await saveProductToFirestore(input);
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -115,23 +68,12 @@ export async function saveProduct(input: ProductFormInput) {
   revalidatePath(`/products/${input.slug}`);
   revalidatePath("/sitemap.xml");
 
-  return { id: productId };
+  return result;
 }
 
 export async function saveSiteSettings(settings: SiteSettings) {
   await requireAdmin();
-
-  await db.$transaction(
-    siteSettingFields.map((field) => {
-      const key = field.key as keyof SiteSettings;
-      const value = String(settings[key]);
-      return db.siteSetting.upsert({
-        where: { key: field.dbKey },
-        update: { value },
-        create: { key: field.dbKey, value },
-      });
-    }),
-  );
+  await saveSiteSettingsToFirestore(settings);
 
   revalidatePath("/");
   revalidatePath("/contact");
@@ -157,10 +99,7 @@ async function validateCategoryParent(parentId: string | null | undefined, categ
     throw new Error("קטגוריה לא יכולה להיות הורה של עצמה");
   }
 
-  const parent = await db.category.findUnique({
-    where: { id: parentId },
-    select: { id: true, parentId: true },
-  });
+  const parent = await getCategoryById(parentId);
 
   if (!parent) {
     throw new Error("קטגוריית הורה לא נמצאה");
@@ -171,10 +110,7 @@ async function validateCategoryParent(parentId: string | null | undefined, categ
   }
 
   if (categoryId) {
-    const children = await db.category.findMany({
-      where: { parentId: categoryId },
-      select: { id: true },
-    });
+    const children = await getChildCategories(categoryId);
 
     if (children.some((child) => child.id === parentId)) {
       throw new Error("לא ניתן להגדיר קטגוריית משנה כהורה");
@@ -224,24 +160,19 @@ export async function saveCategory(input: CategoryFormInput) {
     sortOrder: parsed.data.sortOrder,
   };
 
-  const slugConflict = await db.category.findFirst({
-    where: {
-      slug: data.slug,
-      ...(input.id ? { NOT: { id: input.id } } : {}),
-    },
-  });
+  const slugConflict = await getCategoryBySlugConflict(data.slug, input.id);
 
   if (slugConflict) {
     throw new Error("כתובת slug כבר בשימוש");
   }
 
   if (input.id) {
-    await db.category.update({ where: { id: input.id }, data });
+    await updateCategory(input.id, data);
     revalidateCategoryPaths(data.slug);
     return { id: input.id };
   }
 
-  const created = await db.category.create({ data });
+  const created = await createCategory(data);
   revalidateCategoryPaths(data.slug);
   return { id: created.id };
 }
@@ -249,134 +180,38 @@ export async function saveCategory(input: CategoryFormInput) {
 export async function deleteCategory(id: string) {
   await requireAdmin();
 
-  const category = await db.category.findUnique({
-    where: { id },
-    include: {
-      _count: { select: { products: true, children: true } },
-    },
-  });
+  const category = await getCategoryById(id);
 
   if (!category) {
     throw new Error("Category not found");
   }
 
-  if (category._count.products > 0) {
+  const [productCount, childCount] = await Promise.all([
+    countAllProductsInCategory(id),
+    countChildCategories(id),
+  ]);
+
+  if (productCount > 0) {
     throw new Error("לא ניתן למחוק קטגוריה עם מוצרים משויכים");
   }
 
-  if (category._count.children > 0) {
+  if (childCount > 0) {
     throw new Error("לא ניתן למחוק קטגוריה עם תתי-קטגוריות");
   }
 
-  await db.category.delete({ where: { id } });
+  await deleteCategoryById(id);
   revalidateCategoryPaths(category.slug);
 }
 
 export async function exportProductsCsv() {
   await requireAdmin();
-
-  const products = await db.product.findMany({
-    where: { deletedAt: null },
-    include: {
-      category: true,
-      images: { orderBy: { sortOrder: "asc" } },
-    },
-    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
-  });
-
-  return buildProductsCsv(products);
+  return exportProductsFromFirestore();
 }
-
-export type ProductImportResult = {
-  created: number;
-  updated: number;
-  skipped: number;
-  errors: string[];
-};
 
 export async function importProducts(rows: ProductCsvRow[]): Promise<ProductImportResult> {
   await requireAdmin();
 
-  const result: ProductImportResult = {
-    created: 0,
-    updated: 0,
-    skipped: 0,
-    errors: [],
-  };
-
-  const categories = await db.category.findMany({
-    select: { id: true, slug: true },
-  });
-  const categoryBySlug = new Map(categories.map((category) => [category.slug, category.id]));
-
-  for (const [index, row] of rows.entries()) {
-    const rowLabel = `שורה ${index + 2}`;
-
-    const categoryId = categoryBySlug.get(row.categorySlug);
-    if (!categoryId) {
-      result.errors.push(`${rowLabel}: קטגוריה "${row.categorySlug}" לא נמצאה`);
-      result.skipped += 1;
-      continue;
-    }
-
-    try {
-      const existing = await db.product.findUnique({
-        where: { slug: row.slug },
-        select: { id: true, deletedAt: true },
-      });
-
-      const data = {
-        slug: row.slug,
-        nameHe: row.nameHe,
-        nameEn: row.nameEn ?? null,
-        sku: row.sku ?? null,
-        categoryId,
-        shortDescription: row.shortDescription ?? null,
-        description: row.description ? sanitizeHtml(row.description) : null,
-        specs: row.specs,
-        status: row.status,
-        isFeatured: row.isFeatured,
-      };
-
-      let productId: string;
-
-      if (existing && !existing.deletedAt) {
-        await db.product.update({ where: { id: existing.id }, data });
-        productId = existing.id;
-        result.updated += 1;
-      } else if (existing?.deletedAt) {
-        await db.product.update({
-          where: { id: existing.id },
-          data: { ...data, deletedAt: null },
-        });
-        productId = existing.id;
-        result.updated += 1;
-      } else {
-        const created = await db.product.create({ data });
-        productId = created.id;
-        result.created += 1;
-      }
-
-      if (row.imageUrls.length > 0) {
-        await db.productImage.deleteMany({ where: { productId } });
-        for (const [imageIndex, url] of row.imageUrls.entries()) {
-          await db.productImage.create({
-            data: {
-              productId,
-              url,
-              altTextHe: row.nameHe,
-              sortOrder: imageIndex,
-            },
-          });
-        }
-      }
-    } catch (error) {
-      result.errors.push(
-        `${rowLabel}: ${error instanceof Error ? error.message : "שגיאה לא ידועה"}`,
-      );
-      result.skipped += 1;
-    }
-  }
+  const result = await importProductsToFirestore(rows);
 
   revalidatePath("/admin/products");
   revalidatePath("/products");

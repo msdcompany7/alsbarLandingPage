@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { CategoryEditor } from "@/components/admin/category-editor";
-import { db } from "@/lib/db";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import {
+  getCategoryById,
+  listRootCategoriesForSelectExcluding,
+} from "@/lib/firestore/categories";
 
 type EditCategoryPageProps = {
   params: Promise<{ id: string }>;
@@ -10,12 +15,8 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
   const { id } = await params;
 
   const [category, parentOptions] = await Promise.all([
-    db.category.findUnique({ where: { id } }),
-    db.category.findMany({
-      where: { parentId: null, NOT: { id } },
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, nameHe: true },
-    }),
+    getCategoryById(id),
+    listRootCategoriesForSelectExcluding(id),
   ]);
 
   if (!category) {
@@ -24,11 +25,8 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">עריכת קטגוריה</h1>
-        <p className="mt-2 text-text-secondary">{category.nameHe}</p>
-      </div>
-      <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+      <AdminPageHeader title="עריכת קטגוריה" description={category.nameHe} />
+      <AdminCard padding="lg">
         <CategoryEditor
           parentOptions={parentOptions}
           initial={{
@@ -43,7 +41,7 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
             sortOrder: category.sortOrder,
           }}
         />
-      </div>
+      </AdminCard>
     </div>
   );
 }

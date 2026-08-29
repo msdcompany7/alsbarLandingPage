@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Package, Search, SlidersHorizontal } from "lucide-react";
 import { buildCatalogUrl, type SortOption } from "@/lib/catalog-url";
 import { cn } from "@/lib/utils";
 
@@ -40,29 +40,49 @@ export function CatalogToolbar({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-text-secondary">
-          נמצאו <span className="font-semibold text-text-primary">{total}</span>{" "}
-          מוצרים
-        </p>
+    <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-soft)] sm:p-5">
+      <form onSubmit={handleSearch} className="relative">
+        <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-accent" />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="חיפוש לפי שם, SKU או קטגוריה..."
+          className={cn(
+            "w-full rounded-xl border border-border bg-surface-alt/60 py-3.5 pe-4 ps-12 text-sm",
+            "placeholder:text-text-secondary/80 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/15",
+          )}
+        />
+      </form>
 
-        <div className="flex items-center gap-2">
+      <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex items-center gap-2 text-sm text-text-secondary">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft text-accent">
+            <Package className="h-4 w-4" />
+          </span>
+          <span>
+            נמצאו{" "}
+            <span className="font-bold text-primary">{total}</span>{" "}
+            מוצרים
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onOpenFilters}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text-primary lg:hidden"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-alt/60 px-3.5 py-2.5 text-sm font-medium text-text-primary transition-colors hover:border-accent/30 hover:bg-accent-soft/40 lg:hidden"
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            סינון
+            <SlidersHorizontal className="h-4 w-4 text-accent" />
+            קטגוריות
           </button>
 
-          <label className="flex items-center gap-2 text-sm text-text-secondary">
-            <span className="hidden sm:inline">מיון:</span>
+          <label className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-alt/60 px-3 py-2 text-sm text-text-secondary">
+            <span className="font-medium">מיון</span>
             <select
               value={sort}
               onChange={(e) => handleSortChange(e.target.value as SortOption)}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="rounded-lg border-0 bg-transparent py-0.5 pe-6 ps-1 text-sm font-semibold text-primary focus:outline-none focus:ring-0"
             >
               {(Object.keys(sortLabels) as SortOption[]).map((key) => (
                 <option key={key} value={key}>
@@ -73,20 +93,6 @@ export function CatalogToolbar({
           </label>
         </div>
       </div>
-
-      <form onSubmit={handleSearch} className="relative">
-        <Search className="pointer-events-none absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="חיפוש לפי שם, SKU או קטגוריה..."
-          className={cn(
-            "w-full rounded-lg border border-border bg-surface py-3 pe-4 ps-11 text-sm",
-            "placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
-          )}
-        />
-      </form>
     </div>
   );
 }

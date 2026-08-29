@@ -5,6 +5,7 @@ import { ProductInfo } from "@/components/product/product-info";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
 import { ProductCard } from "@/components/ui/product-card";
+import { Reveal } from "@/components/ui/reveal";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
   getAllProductSlugs,
@@ -57,8 +58,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <>
-      <section className="border-b border-border bg-surface-alt py-6">
-        <Container>
+      <section className="border-b border-border bg-surface-alt/80 bg-grid-light">
+        <Container className="py-4 sm:py-5">
           <Breadcrumbs
             items={[
               { label: "בית", href: "/" },
@@ -72,27 +73,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <section className="section-padding bg-surface">
         <Container>
-          <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-            <ProductGallery images={product.images} productName={product.name} />
-            <ProductInfo product={product} productUrl={productUrl} settings={settings} />
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-12">
+            <Reveal>
+              <ProductGallery images={product.images} productName={product.name} />
+            </Reveal>
+            <Reveal delay={80}>
+              <ProductInfo product={product} productUrl={productUrl} settings={settings} />
+            </Reveal>
           </div>
 
           {product.description && (
-            <div
-              className="prose prose-slate mt-12 max-w-none rounded-xl border border-border bg-surface-alt p-6 md:p-8"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
-            />
+            <Reveal delay={120}>
+              <div
+                className="prose mt-12 max-w-none rounded-2xl border border-border bg-surface-alt p-6 md:p-8"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+              />
+            </Reveal>
           )}
         </Container>
       </section>
 
       {related.length > 0 && (
-        <section className="section-padding bg-surface-alt">
+        <section className="section-padding bg-surface-alt/70 bg-grid-light">
           <Container>
-            <h2 className="mb-8 text-2xl font-bold text-primary">מוצרים קשורים</h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {related.map((item) => (
-                <ProductCard key={item.id} product={item} />
+            <Reveal>
+              <h2 className="heading-section mb-8">מוצרים קשורים</h2>
+            </Reveal>
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+              {related.map((item, index) => (
+                <Reveal key={item.id} delay={index * 70}>
+                  <ProductCard product={item} />
+                </Reveal>
               ))}
             </div>
           </Container>

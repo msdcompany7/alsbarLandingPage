@@ -1,97 +1,99 @@
 import Link from "next/link";
 import { FolderTree, MessageSquare, Package, Plus } from "lucide-react";
-import { db } from "@/lib/db";
+import { AdminActionCard } from "@/components/admin/ui/admin-action-card";
+import { AdminCard, AdminCardHeader } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import { AdminStatCard } from "@/components/admin/ui/admin-stat-card";
+import { countCategories } from "@/lib/firestore/categories";
+import { getRecentInquiries, countNewInquiries } from "@/lib/firestore/inquiries";
+import {
+  countActiveProducts,
+  countPublishedProducts,
+} from "@/lib/firestore/products";
 
 export default async function AdminDashboardPage() {
-  const [productCount, publishedCount, newInquiries, recentInquiries] =
+  const [productCount, publishedCount, newInquiries, recentInquiries, categoryCount] =
     await Promise.all([
-      db.product.count({ where: { deletedAt: null } }),
-      db.product.count({ where: { status: "published", deletedAt: null } }),
-      db.inquiry.count({ where: { status: "new" } }),
-      db.inquiry.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
+      countActiveProducts(),
+      countPublishedProducts(),
+      countNewInquiries(),
+      getRecentInquiries(5),
+      countCategories(),
     ]);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">לוח בקרה</h1>
-        <p className="mt-2 text-text-secondary">סקירה מהירה של האתר והפניות האחרונות.</p>
-      </div>
+      <AdminPageHeader
+        title="לוח בקרה"
+        description="סקירה מהירה של האתר, המוצרים והפניות האחרונות."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { label: "סה\"כ מוצרים", value: productCount },
-          { label: "מוצרים מפורסמים", value: publishedCount },
-          { label: "פניות חדשות", value: newInquiries },
-          { label: "קטגוריות", value: await db.category.count() },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-border bg-surface p-5 shadow-sm"
-          >
-            <p className="text-sm text-text-secondary">{stat.label}</p>
-            <p className="mt-2 text-3xl font-bold text-primary">{stat.value}</p>
-          </div>
-        ))}
+        <AdminStatCard label='סה"כ מוצרים' value={productCount} icon={Package} accent="default" />
+        <AdminStatCard
+          label="מוצרים מפורסמים"
+          value={publishedCount}
+          icon={Package}
+          accent="success"
+        />
+        <AdminStatCard
+          label="פניות חדשות"
+          value={newInquiries}
+          icon={MessageSquare}
+          accent="orange"
+        />
+        <AdminStatCard
+          label="קטגוריות"
+          value={categoryCount}
+          icon={FolderTree}
+          accent="muted"
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Link
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <AdminActionCard
           href="/admin/products/new"
-          className="flex items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
-        >
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-primary">
-            <Plus className="h-6 w-6" />
-          </span>
-          <div>
-            <p className="font-bold text-primary">הוסף מוצר</p>
-            <p className="text-sm text-text-secondary">פרסם פריט חדש בקטלוג</p>
-          </div>
-        </Link>
-        <Link
+          title="הוסף מוצר"
+          description="פרסם פריט חדש בקטלוג"
+          icon={Plus}
+          accent="orange"
+        />
+        <AdminActionCard
           href="/admin/categories"
-          className="flex items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
-        >
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <FolderTree className="h-6 w-6" />
-          </span>
-          <div>
-            <p className="font-bold text-primary">ניהול קטגוריות</p>
-            <p className="text-sm text-text-secondary">יצירה, סדר ותתי-קטגוריות</p>
-          </div>
-        </Link>
-        <Link
+          title="ניהול קטגוריות"
+          description="יצירה, סדר ותתי-קטגוריות"
+          icon={FolderTree}
+          accent="dark"
+        />
+        <AdminActionCard
           href="/admin/inquiries"
-          className="flex items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
-        >
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <MessageSquare className="h-6 w-6" />
-          </span>
-          <div>
-            <p className="font-bold text-primary">פניות לקוחות</p>
-            <p className="text-sm text-text-secondary">{newInquiries} ממתינות לטיפול</p>
-          </div>
-        </Link>
+          title="פניות לקוחות"
+          description={`${newInquiries} ממתינות לטיפול`}
+          icon={MessageSquare}
+          accent="neutral"
+        />
       </div>
 
-      <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-primary">פניות אחרונות</h2>
-          <Link href="/admin/inquiries" className="text-sm font-semibold text-accent hover:underline">
-            הכל
-          </Link>
-        </div>
+      <AdminCard>
+        <AdminCardHeader
+          title="פניות אחרונות"
+          action={
+            <Link
+              href="/admin/inquiries"
+              className="text-sm font-semibold text-accent transition-colors hover:text-accent-hover"
+            >
+              הכל
+            </Link>
+          }
+        />
         {recentInquiries.length === 0 ? (
           <p className="text-sm text-text-secondary">אין פניות עדיין.</p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-2">
             {recentInquiries.map((inquiry) => (
               <li
                 key={inquiry.id}
-                className="flex items-center justify-between gap-4 rounded-lg bg-surface-alt px-4 py-3 text-sm"
+                className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-surface-alt/60 px-4 py-3.5 text-sm transition-colors hover:bg-surface-alt"
               >
                 <div>
                   <p className="font-semibold text-text-primary">{inquiry.name}</p>
@@ -99,7 +101,7 @@ export default async function AdminDashboardPage() {
                     {inquiry.phone}
                   </p>
                 </div>
-                <span className="text-xs text-text-secondary">
+                <span className="shrink-0 text-xs font-medium text-text-secondary">
                   {new Intl.DateTimeFormat("he-IL", {
                     dateStyle: "short",
                     timeStyle: "short",
@@ -109,11 +111,11 @@ export default async function AdminDashboardPage() {
             ))}
           </ul>
         )}
-      </section>
+      </AdminCard>
 
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-accent"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-accent"
       >
         <Package className="h-4 w-4" />
         ניהול כל המוצרים

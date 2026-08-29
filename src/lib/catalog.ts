@@ -1,9 +1,12 @@
-import type { Product as DbProduct, Category as DbCategory, ProductImage, ProductStatus } from "@/generated/prisma";
+import type {
+  FirestoreCategory,
+  FirestoreProduct,
+  ProductImageRecord,
+  ProductSpec,
+  ProductStatus,
+} from "@/lib/types/database";
 
-export type ProductSpec = {
-  label: string;
-  value: string;
-};
+export type { ProductSpec };
 
 export type PublicCategory = {
   id: string;
@@ -33,19 +36,14 @@ export type PublicProduct = {
   status: ProductStatus;
 };
 
-type ProductWithRelations = DbProduct & {
-  category: DbCategory;
-  images: ProductImage[];
+type ProductWithRelations = FirestoreProduct & {
+  category: FirestoreCategory;
 };
 
 export function mapProduct(product: ProductWithRelations): PublicProduct {
-  const specs = Array.isArray(product.specs)
-    ? (product.specs as ProductSpec[])
-    : [];
-
   const images = product.images
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((img) => img.url);
+    .map((img: ProductImageRecord) => img.url);
 
   return {
     id: product.id,
@@ -59,7 +57,7 @@ export function mapProduct(product: ProductWithRelations): PublicProduct {
     category: product.category.nameHe,
     image: images[0] ?? "/placeholder-product.svg",
     images: images.length > 0 ? images : ["/placeholder-product.svg"],
-    specs,
+    specs: product.specs,
     featured: product.isFeatured,
     viewCount: product.viewCount,
     createdAt: product.createdAt.toISOString().slice(0, 10),
@@ -68,7 +66,7 @@ export function mapProduct(product: ProductWithRelations): PublicProduct {
 }
 
 export function mapCategory(
-  category: DbCategory,
+  category: FirestoreCategory,
   productCount: number,
 ): PublicCategory {
   return {

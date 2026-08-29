@@ -22,7 +22,7 @@ export function HeroVideoBackground({ src = "/hero-video.mp4" }: HeroVideoBackgr
       }
 
       video.play().catch(() => {
-        // Autoplay blocked — background stays on poster/fallback color.
+        // Autoplay blocked — poster remains visible.
       });
     }
 
@@ -33,10 +33,10 @@ export function HeroVideoBackground({ src = "/hero-video.mp4" }: HeroVideoBackgr
   }, []);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden bg-primary" aria-hidden="true">
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-contain object-center"
+        className="absolute inset-0 h-full w-full object-cover object-[center_35%] sm:object-center"
         autoPlay
         muted
         loop
@@ -47,9 +47,10 @@ export function HeroVideoBackground({ src = "/hero-video.mp4" }: HeroVideoBackgr
         <source src={src} type="video/mp4" />
       </video>
 
-      {/* Light overlay on the text side (RTL start / right) — video stays visible elsewhere */}
-      <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/35 to-black/10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
+      {/* RTL-aware overlays: darken start (right) for text, bottom for depth */}
+      <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/45 to-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+      <div className="absolute inset-0 bg-black/10" />
     </div>
   );
 }

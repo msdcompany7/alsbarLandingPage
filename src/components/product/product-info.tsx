@@ -19,15 +19,15 @@ export function ProductInfo({ product, productUrl, settings }: ProductInfoProps)
   const phoneHref = siteSettingsToPhoneHref(settings.phone);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:sticky lg:top-24">
       <div>
         <Link
           href={`/categories/${product.categorySlug}`}
-          className="inline-flex rounded-md bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+          className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent transition-colors hover:bg-accent/15"
         >
           {product.category}
         </Link>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-primary md:text-4xl">
+        <h1 className="mt-4 text-2xl font-bold leading-tight text-primary sm:text-3xl lg:text-4xl">
           {product.name}
         </h1>
         {product.sku && (
@@ -37,12 +37,12 @@ export function ProductInfo({ product, productUrl, settings }: ProductInfoProps)
         )}
       </div>
 
-      <p className="text-lg leading-relaxed text-text-secondary">
+      <p className="text-base leading-relaxed text-text-secondary sm:text-lg">
         {product.shortDescription}
       </p>
 
       {product.specs.length > 0 && (
-        <div>
+        <div className="rounded-2xl border border-border bg-surface-alt p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
             מפרט
           </h2>
@@ -50,7 +50,7 @@ export function ProductInfo({ product, productUrl, settings }: ProductInfoProps)
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-surface-alt p-5">
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <p className="mb-4 text-sm text-text-secondary">
           המחירים אינם מוצגים באתר. שלחו בקשה ונחזור אליכם עם הצעה מותאמת.
         </p>

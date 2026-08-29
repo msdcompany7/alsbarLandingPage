@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, LockKeyhole } from "lucide-react";
 import { SiteLogo } from "@/components/layout/site-logo";
+import { AdminAlert } from "@/components/admin/ui/admin-alert";
 import { siteConfig } from "@/lib/site-config";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,38 +28,72 @@ export function AdminLoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      const auth = getFirebaseAuth();
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const idToken = await credential.user.getIdToken(true);
+
+      const response = await fetch("/api/admin/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
       });
 
-      if (result?.error) {
-        setError("אימייל או סיסמה שגויים");
+      if (!response.ok) {
+        await auth.signOut();
+        if (response.status === 403) {
+          setError("המשתמש אינו מורשה לגשת לניהול");
+          return;
+        }
+        if (response.status === 429) {
+          setError("יותר מדי ניסיונות התחברות. נסו שוב בעוד מספר דקות");
+          return;
+        }
+        setError("שגיאה ביצירת ההתחברות. בדקו את הגדרות Firebase Admin ב-.env");
         return;
       }
 
       router.push(callbackUrl);
       router.refresh();
-    } catch {
-      setError("שגיאה בהתחברות. נסו שוב.");
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code: string }).code)
+          : "";
+
+      if (code === "auth/api-key-not-valid.-please-pass-a-valid-api-key.") {
+        setError("מפתח Firebase API לא תקין. עדכנו את NEXT_PUBLIC_FIREBASE_API_KEY מ-Firebase Console");
+      } else if (code === "auth/operation-not-allowed") {
+        setError("התחברות באימייל/סיסמה לא מופעלת ב-Firebase Authentication");
+      } else if (
+        code === "auth/invalid-credential" ||
+        code === "auth/wrong-password" ||
+        code === "auth/user-not-found" ||
+        code === "auth/invalid-email"
+      ) {
+        setError("אימייל או סיסמה שגויים");
+      } else {
+        setError("אימייל או סיסמה שגויים");
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="rounded-xl border border-white/10 bg-primary-light p-8 shadow-xl">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <SiteLogo imageClassName="h-14" />
-          <h1 className="mt-6 text-2xl font-bold text-white">כניסה לניהול</h1>
-          <p className="mt-2 text-sm text-white/70">{siteConfig.brandNameHe}</p>
+    <div className="relative z-10 mx-auto w-full max-w-md">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+        <div className="border-b border-white/10 bg-white/[0.03] px-8 py-8 text-center">
+          <SiteLogo priority variant="header" className="justify-center" />
+          <div className="mx-auto mt-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+            <LockKeyhole className="h-5 w-5" />
+          </div>
+          <h1 className="mt-4 text-2xl font-bold text-white">כניסה לניהול</h1>
+          <p className="mt-2 text-sm text-white/65">{siteConfig.brandNameHe}</p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form onSubmit={onSubmit} className="space-y-5 px-8 py-8">
           <div>
-            <Label htmlFor="email" className="text-white">
+            <Label htmlFor="email" className="text-white/90">
               אימייל
             </Label>
             <Input
@@ -67,12 +103,12 @@ export function AdminLoginForm() {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border-white/20 bg-black/40 text-white text-start"
+              className="mt-1.5 border-white/15 bg-black/30 text-white text-start placeholder:text-white/35"
               required
             />
           </div>
           <div>
-            <Label htmlFor="password" className="text-white">
+            <Label htmlFor="password" className="text-white/90">
               סיסמה
             </Label>
             <Input
@@ -82,18 +118,14 @@ export function AdminLoginForm() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border-white/20 bg-black/40 text-white text-start"
+              className="mt-1.5 border-white/15 bg-black/30 text-white text-start placeholder:text-white/35"
               required
             />
           </div>
 
-          {error && (
-            <p className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </p>
-          )}
+          {error && <AdminAlert variant="error">{error}</AdminAlert>}
 
-          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+          <Button type="submit" variant="primary" className="w-full rounded-xl" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />

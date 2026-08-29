@@ -23,12 +23,15 @@ export function Pagination({
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <nav aria-label="עימוד" className="mt-10 flex items-center justify-center gap-1">
+    <nav
+      aria-label="עימוד"
+      className="mt-10 flex flex-wrap items-center justify-center gap-1 rounded-2xl border border-border bg-surface p-2 shadow-[var(--shadow-soft)]"
+    >
       <Link
         href={buildCatalogUrl({ q, category, sort, page: page - 1 })}
         aria-disabled={page <= 1}
         className={cn(
-          "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
           page <= 1
             ? "pointer-events-none text-text-secondary/50"
             : "text-primary hover:bg-surface-alt",
@@ -44,9 +47,9 @@ export function Pagination({
             key={p}
             href={buildCatalogUrl({ q, category, sort, page: p })}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors",
+              "flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-sm font-semibold transition-colors",
               p === page
-                ? "bg-primary text-white"
+                ? "bg-accent text-white shadow-sm"
                 : "text-text-primary hover:bg-surface-alt",
             )}
             aria-current={p === page ? "page" : undefined}
@@ -60,7 +63,7 @@ export function Pagination({
         href={buildCatalogUrl({ q, category, sort, page: page + 1 })}
         aria-disabled={page >= totalPages}
         className={cn(
-          "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
           page >= totalPages
             ? "pointer-events-none text-text-secondary/50"
             : "text-primary hover:bg-surface-alt",

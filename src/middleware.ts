@@ -1,22 +1,22 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/auth.config";
-
-const { auth } = NextAuth(authConfig);
-
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
+import { NextResponse, type NextRequest } from "next/server";
+import { SESSION_COOKIE } from "@/lib/firebase/session";
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/admin/login";
+  const session = request.cookies.get(SESSION_COOKIE)?.value;
 
-  if (isLoginPage && req.auth) {
-    return Response.redirect(new URL("/admin", req.nextUrl.origin));
+  if (isLoginPage && session) {
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-  if (!isLoginPage && !req.auth) {
-    const loginUrl = new URL("/admin/login", req.nextUrl.origin);
+  if (!isLoginPage && pathname.startsWith("/admin") && !session) {
+    const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return Response.redirect(loginUrl);
+    return NextResponse.redirect(loginUrl);
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/admin/:path*"],

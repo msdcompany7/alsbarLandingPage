@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
 import { ProductEditor } from "@/components/admin/product-editor";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import { getCategorySelectOptions } from "@/lib/firestore/categories";
+import { getAdminProductById } from "@/lib/firestore/products";
 
 type EditProductPageProps = {
   params: Promise<{ id: string }>;
@@ -10,14 +13,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   const { id } = await params;
 
   const [product, categories] = await Promise.all([
-    db.product.findFirst({
-      where: { id, deletedAt: null },
-      include: { images: { orderBy: { sortOrder: "asc" } } },
-    }),
-    db.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, nameHe: true },
-    }),
+    getAdminProductById(id),
+    getCategorySelectOptions(),
   ]);
 
   if (!product) {
@@ -26,11 +23,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">עריכת מוצר</h1>
-        <p className="mt-2 text-text-secondary">{product.nameHe}</p>
-      </div>
-      <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+      <AdminPageHeader title="עריכת מוצר" description={product.nameHe} />
+      <AdminCard padding="lg">
         <ProductEditor
           categories={categories}
           initial={{
@@ -49,7 +43,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             })),
           }}
         />
-      </div>
+      </AdminCard>
     </div>
   );
 }

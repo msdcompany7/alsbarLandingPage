@@ -1,4 +1,6 @@
 import { SettingsForm } from "@/components/admin/settings-form";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export default async function AdminSettingsPage() {
@@ -6,15 +8,13 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">הגדרות אתר</h1>
-        <p className="mt-2 text-text-secondary">
-          עדכנו פרטי קשר, כותרות Hero ומידע שמוצג בכל האתר.
-        </p>
-      </div>
-      <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+      <AdminPageHeader
+        title="הגדרות אתר"
+        description="עדכנו פרטי קשר, כותרות Hero ומידע שמוצג בכל האתר."
+      />
+      <AdminCard padding="lg">
         <SettingsForm initial={settings} />
-      </div>
+      </AdminCard>
     </div>
   );
 }

@@ -9,9 +9,9 @@ export function Input({ className, error, ...props }: InputProps) {
     <div>
       <input
         className={cn(
-          "w-full rounded-lg border bg-surface px-4 py-3 text-sm text-text-primary",
-          "placeholder:text-text-secondary",
-          "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+          "w-full rounded-xl border bg-surface px-4 py-3 text-sm text-text-primary transition-colors",
+          "placeholder:text-text-secondary/80",
+          "focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20",
           error ? "border-danger" : "border-border",
           className,
         )}

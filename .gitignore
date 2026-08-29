@@ -7,11 +7,21 @@ out/
 
 # Environment & secrets
 .env
+.env.local
+.env.*.local
 .env.*
 !.env.example
 
-# Prisma generated client
-src/generated/
+# Firebase service account keys (never commit)
+firebase-service-account*.json
+firebase-admin*.json
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# Local database backups
+backups/
+*.dump
+*.sql
 
 # Logs & OS
 *.log

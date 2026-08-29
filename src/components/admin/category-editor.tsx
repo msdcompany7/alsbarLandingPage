@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminAlert } from "@/components/admin/ui/admin-alert";
+import { AdminSelect } from "@/components/admin/ui/admin-select";
 
 type ParentOption = {
   id: string;
@@ -130,13 +132,12 @@ export function CategoryEditor({ parentOptions, initial }: CategoryEditorProps) 
         </div>
         <div>
           <Label htmlFor="parentId">קטגוריית הורה</Label>
-          <select
+          <AdminSelect
             id="parentId"
             value={form.parentId ?? ""}
             onChange={(e) =>
               updateField("parentId", e.target.value ? e.target.value : null)
             }
-            className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm"
           >
             <option value="">ללא (קטגוריה ראשית)</option>
             {availableParents.map((option) => (
@@ -144,7 +145,7 @@ export function CategoryEditor({ parentOptions, initial }: CategoryEditorProps) 
                 {option.nameHe}
               </option>
             ))}
-          </select>
+          </AdminSelect>
         </div>
       </div>
 
@@ -192,18 +193,14 @@ export function CategoryEditor({ parentOptions, initial }: CategoryEditorProps) 
         </div>
       </div>
 
-      {error && (
-        <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {error}
-        </p>
-      )}
+      {error && <AdminAlert variant="error">{error}</AdminAlert>}
 
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" variant="navy" disabled={isPending}>
+      <div className="flex flex-wrap gap-3 border-t border-border/70 pt-6">
+        <Button type="submit" variant="navy" disabled={isPending} className="rounded-xl">
           {isPending ? "שומר..." : "שמירה"}
         </Button>
         {initial?.id && (
-          <Button type="button" variant="outline" onClick={handleDelete} disabled={isPending}>
+          <Button type="button" variant="outline" onClick={handleDelete} disabled={isPending} className="rounded-xl">
             מחיקה
           </Button>
         )}

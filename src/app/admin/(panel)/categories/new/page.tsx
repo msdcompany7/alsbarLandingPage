@@ -1,24 +1,26 @@
 import { CategoryEditor } from "@/components/admin/category-editor";
-import { db } from "@/lib/db";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import {
+  countCategories,
+  listRootCategoriesForSelect,
+} from "@/lib/firestore/categories";
 
 export default async function NewCategoryPage() {
-  const parentOptions = await db.category.findMany({
-    where: { parentId: null },
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, nameHe: true },
-  });
-
-  const nextSortOrder = await db.category.count();
+  const [parentOptions, nextSortOrder] = await Promise.all([
+    listRootCategoriesForSelect(),
+    countCategories(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">קטגוריה חדשה</h1>
-        <p className="mt-2 text-text-secondary">יצירת קטגוריה ראשית או תת-קטגוריה.</p>
-      </div>
-      <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+      <AdminPageHeader
+        title="קטגוריה חדשה"
+        description="יצירת קטגוריה ראשית או תת-קטגוריה."
+      />
+      <AdminCard padding="lg">
         <CategoryEditor parentOptions={parentOptions} initial={{ sortOrder: nextSortOrder }} />
-      </div>
+      </AdminCard>
     </div>
   );
 }
