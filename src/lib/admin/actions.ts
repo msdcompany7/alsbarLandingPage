@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/firebase/auth-server";
-import { sanitizeHtml } from "@/lib/sanitize";
 import { categoryFormSchema } from "@/lib/validation/category";
 import type { ProductCsvRow } from "@/lib/validation/product-csv";
 import { siteSettingFields } from "@/lib/site-setting-fields";
