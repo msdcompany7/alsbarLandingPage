@@ -3,30 +3,93 @@ import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getStorage, type Storage } from "firebase-admin/storage";
 
-function normalizePrivateKey(raw: string) {
-  return raw.replace(/\\n/g, "\n").trim();
+import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
+import { getAuth, type Auth } from "firebase-admin/auth";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getStorage, type Storage } from "firebase-admin/storage";
+
+const FIREBASE_ADMIN_PRIVATE_KEY_ENV = "FIREBASE_ADMIN_PRIVATE_KEY";
+const PKCS8_BEGIN = "-----BEGIN PRIVATE KEY-----";
+const PKCS8_END = "-----END PRIVATE KEY-----";
+
+function stripSurroundingQuotes(value: string) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+
+  return value;
 }
 
-function isValidPrivateKeyPem(key: string) {
+function normalizePrivateKey(raw: string) {
+  let key = raw.replace(/^\uFEFF/, "").trim();
+  key = stripSurroundingQuotes(key);
+  key = key.replace(/\\n/g, "\n");
+  key = key.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  return key.trim();
+}
+
+function getPrivateKeyDiagnostics(key: string) {
+  return {
+    beginMarkerPresent: key.startsWith(PKCS8_BEGIN),
+    endMarkerPresent: key.endsWith(PKCS8_END),
+    containsNewlines: key.includes("\n"),
+    normalizedLength: key.length,
+  };
+}
+
+function formatPrivateKeyValidationError(key: string) {
+  const diagnostics = getPrivateKeyDiagnostics(key);
+
   return (
-    key.includes("BEGIN PRIVATE KEY") ||
-    key.includes("BEGIN RSA PRIVATE KEY") ||
-    key.includes("BEGIN EC PRIVATE KEY")
+    `${FIREBASE_ADMIN_PRIVATE_KEY_ENV} PEM validation failed after normalization. ` +
+    `BEGIN marker present: ${diagnostics.beginMarkerPresent}. ` +
+    `END marker present: ${diagnostics.endMarkerPresent}. ` +
+    `Contains newline characters: ${diagnostics.containsNewlines}. ` +
+    `Normalized length: ${diagnostics.normalizedLength}.`
   );
 }
 
+function assertValidPrivateKeyPem(key: string) {
+  const diagnostics = getPrivateKeyDiagnostics(key);
+
+  if (!diagnostics.beginMarkerPresent || !diagnostics.endMarkerPresent) {
+    throw new Error(formatPrivateKeyValidationError(key));
+  }
+}
+
+function structurePkcs8PrivateKey(key: string) {
+  const beginIndex = key.indexOf(PKCS8_BEGIN);
+  const endIndex = key.lastIndexOf(PKCS8_END);
+
+  if (beginIndex === -1 || endIndex === -1 || endIndex < beginIndex) {
+    throw new Error(formatPrivateKeyValidationError(key));
+  }
+
+  const body = key.slice(beginIndex + PKCS8_BEGIN.length, endIndex);
+  const base64 = body.replace(/\s/g, "");
+
+  if (!base64) {
+    throw new Error(formatPrivateKeyValidationError(key));
+  }
+
+  const wrapped = base64.match(/.{1,64}/g)?.join("\n") ?? base64;
+
+  return `${PKCS8_BEGIN}\n${wrapped}\n${PKCS8_END}`;
+}
+
 export function getFirebaseAdminPrivateKey() {
-  const raw = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim();
+  const raw = process.env[FIREBASE_ADMIN_PRIVATE_KEY_ENV]?.trim();
   if (!raw) {
     return undefined;
   }
 
-  const key = normalizePrivateKey(raw);
-  if (!isValidPrivateKeyPem(key)) {
-    return undefined;
-  }
+  const normalized = normalizePrivateKey(raw);
+  assertValidPrivateKeyPem(normalized);
 
-  return key;
+  return structurePkcs8PrivateKey(normalized);
 }
 
 function createAdminApp(): App {
