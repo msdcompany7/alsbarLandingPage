@@ -33,3 +33,5 @@ backups/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+public/hero-video.mp4   
