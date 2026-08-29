@@ -189,14 +189,16 @@ function sortProducts<T extends FirestoreProduct>(
   products: readonly T[],
   sort: SortOption,
 ): T[] {
+  const items: T[] = [...products];
+
   switch (sort) {
     case "name":
-      return sortByNameHeAsc(products);
+      return sortByNameHeAsc(items);
     case "views":
-      return sortByViewCountDesc(products);
+      return sortByViewCountDesc(items);
     case "newest":
     default:
-      return sortByDateDesc(products);
+      return sortByDateDesc(items);
   }
 }
 
