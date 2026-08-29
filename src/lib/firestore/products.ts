@@ -29,6 +29,48 @@ import { getAdminDb } from "@/lib/firebase/admin";
 
 const COLLECTION = "products";
 
+function normalizeImageDimension(value: unknown): number | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function buildProductImageRecord(
+  record: Record<string, unknown>,
+  index: number,
+): ProductImageRecord | null {
+  const url = String(record.url ?? "").trim();
+  if (!url) {
+    return null;
+  }
+
+  const image: ProductImageRecord = {
+    url,
+    altTextHe: String(record.altTextHe ?? ""),
+    sortOrder: Number(record.sortOrder ?? index),
+  };
+
+  const width = normalizeImageDimension(record.width);
+  const height = normalizeImageDimension(record.height);
+
+  if (width !== undefined) {
+    image.width = width;
+  }
+
+  if (height !== undefined) {
+    image.height = height;
+  }
+
+  return image;
+}
+
 function normalizeImages(images: unknown): ProductImageRecord[] {
   if (!Array.isArray(images)) {
     return [];
@@ -41,19 +83,10 @@ function normalizeImages(images: unknown): ProductImageRecord[] {
       continue;
     }
 
-    const record = image as Record<string, unknown>;
-    const url = String(record.url ?? "").trim();
-    if (!url) {
-      continue;
+    const built = buildProductImageRecord(image as Record<string, unknown>, index);
+    if (built) {
+      normalized.push(built);
     }
-
-    normalized.push({
-      url,
-      altTextHe: String(record.altTextHe ?? ""),
-      sortOrder: Number(record.sortOrder ?? index),
-      width: record.width != null ? Number(record.width) : null,
-      height: record.height != null ? Number(record.height) : null,
-    });
   }
 
   return normalized.sort((a, b) => a.sortOrder - b.sortOrder);
@@ -126,10 +159,11 @@ async function attachCategory(
     return null;
   }
 
-  return { ...product, category };
+  const withCategory: ProductWithCategory = { ...product, category };
+  return withCategory;
 }
 
-async function attachCategories(products: FirestoreProduct[]) {
+async function attachCategories(products: FirestoreProduct[]): Promise<ProductWithCategory[]> {
   const categoryMap = await getCategoryIdMap();
   const results: ProductWithCategory[] = [];
 
@@ -138,7 +172,9 @@ async function attachCategories(products: FirestoreProduct[]) {
     if (!category) {
       continue;
     }
-    results.push({ ...product, category });
+
+    const withCategory: ProductWithCategory = { ...product, category };
+    results.push(withCategory);
   }
 
   return results;
@@ -149,7 +185,10 @@ async function listAllProducts(): Promise<FirestoreProduct[]> {
   return snapshot.docs.map((doc) => mapProductDoc(doc.id, doc.data()));
 }
 
-function sortProducts<T extends FirestoreProduct>(products: T[], sort: SortOption): T[] {
+function sortProducts<T extends FirestoreProduct>(
+  products: readonly T[],
+  sort: SortOption,
+): T[] {
   switch (sort) {
     case "name":
       return sortByNameHeAsc(products);
@@ -223,7 +262,7 @@ export async function queryProducts(params: ProductQuery = {}): Promise<ProductQ
   const allProducts = await listAllProducts();
   const withCategories = await attachCategories(allProducts);
   const filtered = filterProducts(withCategories, params);
-  const sorted = sortProducts(filtered, sort);
+  const sorted: ProductWithCategory[] = sortProducts(filtered, sort);
   const paginated = paginateArray(sorted, page, pageSize);
 
   return {
