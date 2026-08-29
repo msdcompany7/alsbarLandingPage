@@ -83,7 +83,7 @@ export function AdminLoginForm() {
     <div className="relative z-10 mx-auto w-full max-w-md">
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65)] backdrop-blur-xl">
         <div className="border-b border-white/10 bg-white/[0.03] px-8 py-8 text-center">
-          <SiteLogo priority variant="header" className="justify-center" />
+          <SiteLogo priority framed className="justify-center" />
           <div className="mx-auto mt-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <LockKeyhole className="h-5 w-5" />
           </div>

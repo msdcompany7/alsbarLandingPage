@@ -34,28 +34,29 @@ function normalizeImages(images: unknown): ProductImageRecord[] {
     return [];
   }
 
-  return images
-    .map((image, index) => {
-      if (!image || typeof image !== "object") {
-        return null;
-      }
+  const normalized: ProductImageRecord[] = [];
 
-      const record = image as Record<string, unknown>;
-      const url = String(record.url ?? "").trim();
-      if (!url) {
-        return null;
-      }
+  for (const [index, image] of images.entries()) {
+    if (!image || typeof image !== "object") {
+      continue;
+    }
 
-      return {
-        url,
-        altTextHe: String(record.altTextHe ?? ""),
-        sortOrder: Number(record.sortOrder ?? index),
-        width: record.width != null ? Number(record.width) : null,
-        height: record.height != null ? Number(record.height) : null,
-      };
-    })
-    .filter((image): image is ProductImageRecord => image !== null)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    const record = image as Record<string, unknown>;
+    const url = String(record.url ?? "").trim();
+    if (!url) {
+      continue;
+    }
+
+    normalized.push({
+      url,
+      altTextHe: String(record.altTextHe ?? ""),
+      sortOrder: Number(record.sortOrder ?? index),
+      width: record.width != null ? Number(record.width) : null,
+      height: record.height != null ? Number(record.height) : null,
+    });
+  }
+
+  return normalized.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 function normalizeSpecs(specs: unknown): ProductSpec[] {
@@ -148,7 +149,7 @@ async function listAllProducts(): Promise<FirestoreProduct[]> {
   return snapshot.docs.map((doc) => mapProductDoc(doc.id, doc.data()));
 }
 
-function sortProducts(products: FirestoreProduct[], sort: SortOption) {
+function sortProducts<T extends FirestoreProduct>(products: T[], sort: SortOption): T[] {
   switch (sort) {
     case "name":
       return sortByNameHeAsc(products);
