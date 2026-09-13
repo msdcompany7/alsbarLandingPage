@@ -1,23 +1,35 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FolderTree, Pencil, Plus } from "lucide-react";
-import { db } from "@/lib/db";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableCell,
+  AdminTableElement,
+  AdminTableHead,
+  AdminTableHeadCell,
+  AdminTableRow,
+} from "@/components/admin/ui/admin-table";
+import { Button } from "@/components/ui/button";
+import { listCategoriesForAdminTable } from "@/lib/firestore/categories";
+import { countAllProductsInCategory } from "@/lib/firestore/products";
 
-type CategoryRecord = Awaited<
-  ReturnType<typeof db.category.findMany<{ include: { parent: { select: { nameHe: true } }; _count: { select: { products: true; children: true } } } }>>
->[number];
+type CategoryRecord = Awaited<ReturnType<typeof listCategoriesForAdminTable>>[number];
 
-function buildCategoryRows(
+async function buildCategoryRows(
   categories: CategoryRecord[],
   childrenByParent: Map<string, CategoryRecord[]>,
+  productCounts: Map<string, number>,
   depth = 0,
-): ReactNode[] {
+): Promise<ReactNode[]> {
   const rows: ReactNode[] = [];
 
   for (const category of categories) {
     rows.push(
-      <tr key={category.id} className="border-t border-border">
-        <td className="px-4 py-3">
+      <AdminTableRow key={category.id}>
+        <AdminTableCell>
           <div
             className="font-semibold text-text-primary"
             style={{ paddingInlineStart: depth * 20 }}
@@ -31,25 +43,31 @@ function buildCategoryRows(
           >
             {category.slug}
           </div>
-        </td>
-        <td className="px-4 py-3 text-text-secondary">{category.parent?.nameHe ?? "—"}</td>
-        <td className="px-4 py-3 text-text-secondary">{category._count.products}</td>
-        <td className="px-4 py-3 text-text-secondary">{category.sortOrder}</td>
-        <td className="px-4 py-3">
+        </AdminTableCell>
+        <AdminTableCell className="text-text-secondary">
+          {category.parent?.nameHe ?? "—"}
+        </AdminTableCell>
+        <AdminTableCell className="text-text-secondary">
+          {productCounts.get(category.id) ?? 0}
+        </AdminTableCell>
+        <AdminTableCell className="text-text-secondary">{category.sortOrder}</AdminTableCell>
+        <AdminTableCell>
           <Link
             href={`/admin/categories/${category.id}`}
-            className="inline-flex items-center gap-1 font-medium text-primary hover:text-accent"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-primary transition-colors hover:bg-surface-alt hover:text-accent"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
             עריכה
           </Link>
-        </td>
-      </tr>,
+        </AdminTableCell>
+      </AdminTableRow>,
     );
 
     const children = childrenByParent.get(category.id) ?? [];
     if (children.length > 0) {
-      rows.push(...buildCategoryRows(children, childrenByParent, depth + 1));
+      rows.push(
+        ...(await buildCategoryRows(children, childrenByParent, productCounts, depth + 1)),
+      );
     }
   }
 
@@ -57,13 +75,15 @@ function buildCategoryRows(
 }
 
 export default async function AdminCategoriesPage() {
-  const categories = await db.category.findMany({
-    include: {
-      parent: { select: { nameHe: true } },
-      _count: { select: { products: true, children: true } },
-    },
-    orderBy: [{ sortOrder: "asc" }, { nameHe: "asc" }],
-  });
+  const categories = await listCategoriesForAdminTable();
+  const productCounts = new Map(
+    await Promise.all(
+      categories.map(async (category) => [
+        category.id,
+        await countAllProductsInCategory(category.id),
+      ] as const),
+    ),
+  );
 
   const roots = categories.filter((category) => !category.parentId);
   const childrenByParent = new Map<string, CategoryRecord[]>();
@@ -75,68 +95,51 @@ export default async function AdminCategoriesPage() {
     childrenByParent.set(category.parentId, siblings);
   }
 
+  const rows = await buildCategoryRows(roots, childrenByParent, productCounts);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">קטגוריות</h1>
-          <p className="mt-2 text-text-secondary">{categories.length} קטגוריות במערכת</p>
-        </div>
-        <Link
-          href="/admin/categories/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-primary hover:bg-accent-hover"
-        >
-          <Plus className="h-4 w-4" />
-          הוסף קטגוריה
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="קטגוריות"
+        description={`${categories.length} קטגוריות במערכת`}
+        actions={
+          <Button href="/admin/categories/new" variant="primary" size="sm" className="rounded-xl">
+            <Plus className="h-4 w-4" />
+            הוסף קטגוריה
+          </Button>
+        }
+      />
 
-      <div className="rounded-xl border border-border bg-surface p-5 text-sm text-text-secondary">
-        <div className="flex items-start gap-3">
-          <FolderTree className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-          <p>
-            ניתן ליצור עד שני רמות: קטגוריה ראשית ותת-קטגוריה. לא ניתן למחוק קטגוריה עם מוצרים
-            או תתי-קטגוריות.
-          </p>
-        </div>
-      </div>
+      <AdminCard className="flex items-start gap-3 border-accent/20 bg-accent-soft/30 text-sm text-text-secondary">
+        <FolderTree className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+        <p>
+          ניתן ליצור עד שני רמות: קטגוריה ראשית ותת-קטגוריה. לא ניתן למחוק קטגוריה עם מוצרים
+          או תתי-קטגוריות.
+        </p>
+      </AdminCard>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-surface-alt text-text-secondary">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-start font-semibold">
-                  קטגוריה
-                </th>
-                <th scope="col" className="px-4 py-3 text-start font-semibold">
-                  הורה
-                </th>
-                <th scope="col" className="px-4 py-3 text-start font-semibold">
-                  מוצרים
-                </th>
-                <th scope="col" className="px-4 py-3 text-start font-semibold">
-                  סדר
-                </th>
-                <th scope="col" className="px-4 py-3 text-start font-semibold">
-                  פעולות
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {roots.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
-                    אין קטגוריות עדיין.
-                  </td>
-                </tr>
-              ) : (
-                buildCategoryRows(roots, childrenByParent)
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdminTable>
+        <AdminTableElement>
+          <AdminTableHead>
+            <AdminTableHeadCell>קטגוריה</AdminTableHeadCell>
+            <AdminTableHeadCell>הורה</AdminTableHeadCell>
+            <AdminTableHeadCell>מוצרים</AdminTableHeadCell>
+            <AdminTableHeadCell>סדר</AdminTableHeadCell>
+            <AdminTableHeadCell>פעולות</AdminTableHeadCell>
+          </AdminTableHead>
+          <AdminTableBody>
+            {roots.length === 0 ? (
+              <AdminTableRow>
+                <AdminTableCell colSpan={5} className="py-10 text-center text-text-secondary">
+                  אין קטגוריות עדיין.
+                </AdminTableCell>
+              </AdminTableRow>
+            ) : (
+              rows
+            )}
+          </AdminTableBody>
+        </AdminTableElement>
+      </AdminTable>
     </div>
   );
 }

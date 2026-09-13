@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { db } from "@/lib/db";
-import { publishedProductWhere } from "@/lib/catalog";
+import { getCategoriesForSitemap } from "@/lib/firestore/categories";
+import { getProductsForSitemap } from "@/lib/firestore/products";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://electricity-shop.co.il";
 
@@ -22,11 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const [products, categories] = await Promise.all([
-      db.product.findMany({
-        where: publishedProductWhere,
-        select: { slug: true, updatedAt: true },
-      }),
-      db.category.findMany({ select: { slug: true, updatedAt: true } }),
+      getProductsForSitemap(),
+      getCategoriesForSitemap(),
     ]);
 
     return [

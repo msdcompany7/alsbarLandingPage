@@ -30,7 +30,7 @@ export function CsvExportButton() {
 
   return (
     <div>
-      <Button type="button" variant="outline" onClick={handleExport} disabled={isPending}>
+      <Button type="button" variant="outline" onClick={handleExport} disabled={isPending} className="rounded-xl">
         <Download className="h-4 w-4" />
         {isPending ? "מייצא..." : "ייצוא CSV"}
       </Button>

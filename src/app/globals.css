@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #000000;
+  --primary: #0a0a0a;
   --primary-light: #1a1a1a;
   --accent: #ff6a00;
   --accent-hover: #e85d00;
+  --accent-soft: #fff4ec;
   --surface: #ffffff;
-  --surface-alt: #f5f5f5;
+  --surface-alt: #f7f7f8;
+  --surface-muted: #efeff1;
   --text-primary: #111111;
-  --text-secondary: #666666;
-  --border: #e5e5e5;
+  --text-secondary: #5c5c5c;
+  --border: #e8e8eb;
   --success: #0e7c5a;
   --danger: #b3261e;
+  --shadow-soft: 0 4px 24px -6px rgb(0 0 0 / 0.08);
+  --shadow-card: 0 8px 32px -12px rgb(0 0 0 / 0.12);
+  --shadow-lift: 0 16px 40px -16px rgb(0 0 0 / 0.16);
 }
 
 @theme inline {
@@ -19,27 +24,31 @@
   --color-primary-light: var(--primary-light);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
   --color-surface: var(--surface);
   --color-surface-alt: var(--surface-alt);
+  --color-surface-muted: var(--surface-muted);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-border: var(--border);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --font-sans: var(--font-heebo), system-ui, sans-serif;
-  --radius-card: 0.5rem;
-  --radius-button: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-button: 0.625rem;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-surface text-text-primary antialiased;
     font-family: var(--font-heebo), system-ui, sans-serif;
     line-height: 1.6;
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -53,14 +62,123 @@
   }
 
   .section-padding {
-    @apply py-16 md:py-24;
+    @apply py-14 sm:py-16 md:py-20 lg:py-24;
   }
 
+  .section-padding-sm {
+    @apply py-10 sm:py-12 md:py-16;
+  }
+
+  /* Typography scale */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm;
+  }
+
+  .heading-display {
+    @apply text-balance text-3xl font-bold leading-[1.15] tracking-tight text-primary sm:text-4xl md:text-5xl lg:text-[3.25rem];
+  }
+
+  .heading-section {
+    @apply text-balance text-2xl font-bold leading-tight text-primary sm:text-3xl md:text-[2rem];
+  }
+
+  .heading-page {
+    @apply text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl md:text-[2.5rem];
+  }
+
+  .lead {
+    @apply text-base leading-relaxed text-text-secondary sm:text-lg;
+  }
+
+  /* Cards & surfaces */
+  .card-surface {
+    @apply rounded-xl border border-border bg-surface;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+  }
+
+  /* Scroll reveal (adapted from GeniusApp_Web pattern) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Subtle grid texture for light sections */
+  .bg-grid-light {
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Prose for legal/content */
   .prose ul {
     @apply my-4 list-disc space-y-2 ps-6;
   }
 
   .prose p {
     @apply my-3 leading-relaxed text-text-secondary;
+  }
+
+  .prose h2 {
+    @apply mt-8 mb-3 text-xl font-bold text-primary;
+  }
+
+  .prose h3 {
+    @apply mt-6 mb-2 text-lg font-semibold text-primary;
+  }
+
+  /* Admin panel */
+  .admin-shell {
+    background-image:
+      radial-gradient(circle at 100% 0%, rgb(255 106 0 / 0.04), transparent 28%),
+      radial-gradient(circle at 0% 100%, rgb(0 0 0 / 0.03), transparent 24%);
+  }
+
+  .admin-sidebar {
+    background:
+      linear-gradient(180deg, #111111 0%, #0a0a0a 55%, #141414 100%);
+    box-shadow: inset -1px 0 0 rgb(255 255 255 / 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .card-hover:hover {
+    transform: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

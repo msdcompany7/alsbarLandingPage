@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { createInquiry } from "@/lib/firestore/inquiries";
 import { sendInquiryEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { inquiryApiSchema } from "@/lib/validation/inquiry";
@@ -29,14 +29,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const inquiry = await db.inquiry.create({
-      data: {
-        name: parsed.data.name,
-        phone: parsed.data.phone,
-        email: parsed.data.email,
-        message: parsed.data.message,
-        source: "contact_form",
-      },
+    const inquiry = await createInquiry({
+      name: parsed.data.name,
+      phone: parsed.data.phone,
+      email: parsed.data.email,
+      message: parsed.data.message,
+      source: "contact_form",
     });
 
     await sendInquiryEmail(parsed.data);

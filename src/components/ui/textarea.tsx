@@ -9,9 +9,9 @@ export function Textarea({ className, error, ...props }: TextareaProps) {
     <div>
       <textarea
         className={cn(
-          "min-h-[140px] w-full resize-y rounded-lg border bg-surface px-4 py-3 text-sm text-text-primary",
-          "placeholder:text-text-secondary",
-          "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+          "min-h-[140px] w-full resize-y rounded-xl border bg-surface px-4 py-3 text-sm text-text-primary transition-colors",
+          "placeholder:text-text-secondary/80",
+          "focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20",
           error ? "border-danger" : "border-border",
           className,
         )}

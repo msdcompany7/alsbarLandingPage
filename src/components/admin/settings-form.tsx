@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminAlert } from "@/components/admin/ui/admin-alert";
 
 type SettingsFormProps = {
   initial: SiteSettings;
@@ -84,18 +85,10 @@ export function SettingsForm({ initial }: SettingsFormProps) {
         })}
       </div>
 
-      {message && (
-        <p className="rounded-lg border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {error}
-        </p>
-      )}
+      {message && <AdminAlert variant="success">{message}</AdminAlert>}
+      {error && <AdminAlert variant="error">{error}</AdminAlert>}
 
-      <Button type="submit" variant="navy" disabled={isPending}>
+      <Button type="submit" variant="navy" disabled={isPending} className="rounded-xl">
         {isPending ? "שומר..." : "שמירת הגדרות"}
       </Button>
     </form>

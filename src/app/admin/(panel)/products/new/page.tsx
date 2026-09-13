@@ -1,23 +1,17 @@
-import { db } from "@/lib/db";
 import { ProductEditor } from "@/components/admin/product-editor";
+import { AdminCard } from "@/components/admin/ui/admin-card";
+import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
+import { getCategorySelectOptions } from "@/lib/firestore/categories";
 
 export default async function NewProductPage() {
-  const categories = await db.category.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, nameHe: true },
-  });
+  const categories = await getCategorySelectOptions();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">הוספת מוצר</h1>
-        <p className="mt-2 text-text-secondary">
-          מלאu את הפרטים ופרסם כשאתם מוכנים.
-        </p>
-      </div>
-      <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <AdminPageHeader title="מוצר חדש" description="הוספת מוצר חדש לקטלוג." />
+      <AdminCard padding="lg">
         <ProductEditor categories={categories} />
-      </div>
+      </AdminCard>
     </div>
   );
 }

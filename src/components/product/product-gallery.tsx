@@ -47,7 +47,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="group relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-surface-alt"
+          className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-border bg-surface-alt shadow-[var(--shadow-soft)]"
           aria-label="הגדל תמונה"
         >
           <Image

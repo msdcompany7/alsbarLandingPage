@@ -71,6 +71,7 @@ export function CatalogFiltersDrawer({
           activeCategory={activeCategory}
           q={q}
           sort={sort}
+          variant="drawer"
         />
       </div>
     </div>

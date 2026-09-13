@@ -11,7 +11,16 @@ import {
   type ProductCsvRow,
 } from "@/lib/validation/product-csv";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { AdminAlert } from "@/components/admin/ui/admin-alert";
+import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableCell,
+  AdminTableElement,
+  AdminTableHead,
+  AdminTableHeadCell,
+  AdminTableRow,
+} from "@/components/admin/ui/admin-table";
 
 type PreviewRow = {
   rowNumber: number;
@@ -104,7 +113,7 @@ export function CsvImportForm() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-surface-alt p-5">
+      <div className="rounded-2xl border border-border/80 bg-surface-alt/70 p-5">
         <p className="text-sm font-semibold text-text-primary">עמודות נדרשות בקובץ CSV</p>
         <p className="mt-2 text-xs text-text-secondary" dir="ltr">
           {PRODUCT_CSV_HEADERS.join(", ")}
@@ -114,13 +123,13 @@ export function CsvImportForm() {
         </p>
       </div>
 
-      <div className="rounded-xl border-2 border-dashed border-border bg-surface p-6">
+      <div className="rounded-2xl border-2 border-dashed border-border/80 bg-surface-alt/40 p-8">
         <Upload className="mx-auto h-8 w-8 text-text-secondary" />
         <p className="mt-3 text-center text-sm font-medium text-text-primary">
           בחרו קובץ CSV לתצוגה מקדימה
         </p>
         <label className="mt-4 flex justify-center">
-          <span className="cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light">
+          <span className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-light hover:shadow-md">
             בחירת קובץ
           </span>
           <input
@@ -136,11 +145,7 @@ export function CsvImportForm() {
         )}
       </div>
 
-      {parseError && (
-        <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {parseError}
-        </p>
-      )}
+      {parseError && <AdminAlert variant="error">{parseError}</AdminAlert>}
 
       {previewRows.length > 0 && (
         <div className="space-y-4">
@@ -152,62 +157,45 @@ export function CsvImportForm() {
             {invalidCount > 0 && <span className="text-danger">{invalidCount} עם שגיאות</span>}
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+          <AdminTable>
             <div className="max-h-96 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-surface-alt text-text-secondary">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      #
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      slug
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      שם
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      קטגוריה
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      סטטוס
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start font-semibold">
-                      תקינות
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+              <AdminTableElement>
+                <AdminTableHead>
+                  <AdminTableHeadCell>#</AdminTableHeadCell>
+                  <AdminTableHeadCell>slug</AdminTableHeadCell>
+                  <AdminTableHeadCell>שם</AdminTableHeadCell>
+                  <AdminTableHeadCell>קטגוריה</AdminTableHeadCell>
+                  <AdminTableHeadCell>סטטוס</AdminTableHeadCell>
+                  <AdminTableHeadCell>תקינות</AdminTableHeadCell>
+                </AdminTableHead>
+                <AdminTableBody>
                   {previewRows.map((row) => (
-                    <tr key={row.rowNumber} className="border-t border-border">
-                      <td className="px-4 py-3 text-text-secondary">{row.rowNumber}</td>
-                      <td className="px-4 py-3" dir="ltr">
-                        {row.slug}
-                      </td>
-                      <td className="px-4 py-3">{row.nameHe}</td>
-                      <td className="px-4 py-3" dir="ltr">
-                        {row.categorySlug}
-                      </td>
-                      <td className="px-4 py-3">{row.status}</td>
-                      <td className="px-4 py-3">
+                    <AdminTableRow key={row.rowNumber}>
+                      <AdminTableCell className="text-text-secondary">{row.rowNumber}</AdminTableCell>
+                      <AdminTableCell dir="ltr">{row.slug}</AdminTableCell>
+                      <AdminTableCell>{row.nameHe}</AdminTableCell>
+                      <AdminTableCell dir="ltr">{row.categorySlug}</AdminTableCell>
+                      <AdminTableCell>{row.status}</AdminTableCell>
+                      <AdminTableCell>
                         {row.errors.length === 0 ? (
-                          <span className="text-success">תקין</span>
+                          <span className="font-semibold text-success">תקין</span>
                         ) : (
                           <span className="text-danger">{row.errors.join(" · ")}</span>
                         )}
-                      </td>
-                    </tr>
+                      </AdminTableCell>
+                    </AdminTableRow>
                   ))}
-                </tbody>
-              </table>
+                </AdminTableBody>
+              </AdminTableElement>
             </div>
-          </div>
+          </AdminTable>
 
           <Button
             type="button"
             variant="navy"
             disabled={isPending || validRows.length === 0}
             onClick={handleImport}
+            className="rounded-xl"
           >
             {isPending ? "מייבא..." : `ייבוא ${validRows.length} מוצרים`}
           </Button>
@@ -215,16 +203,7 @@ export function CsvImportForm() {
       )}
 
       {resultMessage && (
-        <p
-          className={cn(
-            "rounded-lg border px-4 py-3 text-sm",
-            parseError
-              ? "border-accent/20 bg-accent/5 text-primary"
-              : "border-success/20 bg-success/5 text-success",
-          )}
-        >
-          {resultMessage}
-        </p>
+        <AdminAlert variant={parseError ? "info" : "success"}>{resultMessage}</AdminAlert>
       )}
     </div>
   );

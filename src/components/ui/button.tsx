@@ -3,14 +3,15 @@ import { cn } from "@/lib/utils";
 
 const variants = {
   primary:
-    "bg-accent text-white hover:bg-accent-hover focus-visible:ring-accent",
+    "bg-accent text-white shadow-sm hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-accent",
   secondary:
-    "bg-transparent border-2 border-white/80 text-white hover:bg-white/10 focus-visible:ring-white",
-  navy: "bg-primary text-white hover:bg-primary-light focus-visible:ring-primary",
+    "bg-white/10 border-2 border-white/70 text-white backdrop-blur-sm hover:bg-white/15 focus-visible:ring-white",
+  navy:
+    "bg-primary text-white shadow-sm hover:bg-primary-light hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-primary",
   ghost:
     "bg-transparent text-primary hover:bg-surface-alt focus-visible:ring-primary",
   outline:
-    "bg-transparent border border-border text-text-primary hover:bg-surface-alt focus-visible:ring-primary",
+    "bg-transparent border border-border text-text-primary hover:border-primary/30 hover:bg-surface-alt focus-visible:ring-primary",
 } as const;
 
 type ButtonProps = {
@@ -37,9 +38,9 @@ export function Button({
   disabled,
 }: ButtonProps) {
   const sizes = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-6 py-3 text-[15px]",
-    lg: "px-8 py-4 text-base",
+    sm: "min-h-10 px-4 py-2 text-sm",
+    md: "min-h-11 px-6 py-3 text-[15px]",
+    lg: "min-h-12 px-7 py-3.5 text-base sm:min-h-[3.25rem] sm:px-8 sm:py-4",
   };
 
   const classes = cn(
