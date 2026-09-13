@@ -18,10 +18,10 @@ export function HeroSection({ settings, productCount }: HeroSectionProps) {
   );
 
   return (
-    <section className="relative flex min-h-[88svh] items-end overflow-hidden bg-primary sm:min-h-[90svh] lg:min-h-[92vh] lg:items-center">
+    <section className="relative flex min-h-[52svh] items-end overflow-hidden bg-primary sm:min-h-[58svh] md:min-h-[62svh] lg:min-h-[65vh] lg:items-center">
       <HeroVideoBackground />
 
-      <Container className="relative z-10 w-full pb-10 pt-24 sm:pb-12 sm:pt-28 lg:py-20">
+      <Container className="relative z-10 w-full pb-8 pt-20 sm:pb-10 sm:pt-24 lg:py-14">
         <Reveal className="max-w-2xl">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/35 px-4 py-1.5 text-xs font-medium text-white/95 backdrop-blur-md sm:text-sm">
             <Zap className="h-3.5 w-3.5 text-accent" />
