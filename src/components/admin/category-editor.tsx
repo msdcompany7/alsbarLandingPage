@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminAlert } from "@/components/admin/ui/admin-alert";
 import { AdminSelect } from "@/components/admin/ui/admin-select";
+import { SingleImageUploader } from "@/components/admin/single-image-uploader";
 
 type ParentOption = {
   id: string;
@@ -158,18 +159,12 @@ export function CategoryEditor({ parentOptions, initial }: CategoryEditorProps) 
         />
       </div>
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div>
-          <Label htmlFor="imageUrl">כתובת תמונה</Label>
-          <Input
-            id="imageUrl"
-            dir="ltr"
-            value={form.imageUrl ?? ""}
-            onChange={(e) => updateField("imageUrl", e.target.value)}
-            className="text-start"
-            placeholder="https://..."
-          />
-        </div>
+      <SingleImageUploader
+        value={form.imageUrl ?? ""}
+        onChange={(url) => updateField("imageUrl", url)}
+      />
+
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <Label htmlFor="icon">אייקון (Lucide)</Label>
           <Input
