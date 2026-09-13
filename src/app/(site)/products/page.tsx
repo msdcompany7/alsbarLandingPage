@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import { CatalogView } from "@/components/catalog/catalog-view";
 import { Container } from "@/components/ui/container";
+import { searchCategories } from "@/lib/catalog-search";
 import {
   getCategories,
   getCategoryBySlug,
@@ -41,6 +42,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     getPublishedProductCount(),
   ]);
 
+  const matchingCategories = params.q ? searchCategories(categories, params.q) : [];
+
   const pageTitle = categoryData?.name ?? "קטלוג מוצרים";
   const pageDescription = categoryData?.description
     ? categoryData.description
@@ -67,6 +70,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
         <CatalogView
           categories={categories}
+          matchingCategories={matchingCategories}
           products={result.products}
           total={result.total}
           page={result.page}

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { PackageSearch } from "lucide-react";
+import { LayoutGrid, PackageSearch } from "lucide-react";
 import { ActiveFilters } from "@/components/catalog/active-filters";
 import { CatalogFiltersDrawer } from "@/components/catalog/catalog-filters-drawer";
 import { CatalogSidebar } from "@/components/catalog/catalog-sidebar";
@@ -14,6 +15,7 @@ import type { SortOption } from "@/lib/catalog-url";
 
 type CatalogViewProps = {
   categories: PublicCategory[];
+  matchingCategories?: PublicCategory[];
   products: PublicProduct[];
   total: number;
   page: number;
@@ -26,6 +28,7 @@ type CatalogViewProps = {
 
 export function CatalogView({
   categories,
+  matchingCategories = [],
   products,
   total,
   page,
@@ -49,6 +52,26 @@ export function CatalogView({
         />
 
         <div className="min-w-0 space-y-5">
+          {matchingCategories.length > 0 && (
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-soft)] sm:p-5">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-primary">
+                <LayoutGrid className="h-4 w-4 text-accent" />
+                קטגוריות תואמות
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {matchingCategories.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/categories/${item.slug}`}
+                    className="rounded-xl border border-border bg-surface-alt/70 px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-accent/30 hover:bg-accent-soft/40"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           <CatalogToolbar
             q={q}
             category={category}

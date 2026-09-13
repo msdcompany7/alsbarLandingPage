@@ -1,6 +1,8 @@
 import { MessageCircle, ShoppingBag, Zap } from "lucide-react";
 import { HeroVideoBackground } from "@/components/home/hero-video-background";
+import { HomeSearchBar } from "@/components/home/home-search-bar";
 import { Reveal } from "@/components/ui/reveal";
+import type { PublicCategory } from "@/lib/catalog";
 import type { SiteSettings } from "@/lib/site-settings";
 import { buildWhatsAppUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,9 +11,10 @@ import { Container } from "@/components/ui/container";
 type HeroSectionProps = {
   settings: SiteSettings;
   productCount: number;
+  categories: PublicCategory[];
 };
 
-export function HeroSection({ settings, productCount }: HeroSectionProps) {
+export function HeroSection({ settings, productCount, categories }: HeroSectionProps) {
   const whatsappUrl = buildWhatsAppUrl(
     settings.whatsapp,
     `שלום, אשמח לקבל מידע על מוצרי ${settings.name}`,
@@ -38,7 +41,9 @@ export function HeroSection({ settings, productCount }: HeroSectionProps) {
 
           <p className="mt-3 text-sm text-white/70">{settings.tagline}</p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+          <HomeSearchBar categories={categories} className="mt-6 sm:mt-7" />
+
+          <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
             <Button href="/products" variant="primary" size="lg" className="w-full sm:w-auto">
               <ShoppingBag className="h-5 w-5" />
               גלו את המוצרים
