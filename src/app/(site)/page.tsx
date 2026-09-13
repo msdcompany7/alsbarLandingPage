@@ -22,11 +22,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection
-        settings={settings}
-        productCount={productCount}
-        categories={categories}
-      />
+      <HeroSection settings={settings} productCount={productCount} />
       <TrustBar settings={settings} productCount={productCount} />
       <CategoriesSection categories={categories} />
       <FeaturedProducts products={featuredProducts} />
